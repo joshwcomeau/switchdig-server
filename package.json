@@ -1,0 +1,24 @@
+{
+  "name": "switchdig-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "secrets.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshwcomeau/switchdig-services.git"
+  },
+  "author": "Josh W Comeau",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joshwcomeau/switchdig-services/issues"
+  },
+  "homepage": "https://github.com/joshwcomeau/switchdig-services#readme",
+  "dependencies": {
+    "async": "^2.1.2",
+    "dynamodb": "^0.3.6",
+    "node-uuid": "^1.4.7"
+  }
+}

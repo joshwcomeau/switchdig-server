@@ -43,12 +43,20 @@ provider:
 #  artifact: my-service-code.zip
 
 functions:
-  getUser:
-    handler: handler.getUser
+  createUser:
+    handler: handler.createUser
     events:
       - http:
-          path: hello/world
+          path: users/create
+          method: post
+          cors: true
+  listUsers:
+    handler: handler.listUsers
+    events:
+      - http:
+          path: users
           method: get
+          cors: true
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
