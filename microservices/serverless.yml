@@ -16,6 +16,14 @@ service: app
 provider:
   name: aws
   runtime: nodejs4.3
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource:
+        - "arn:aws:dynamodb:us-east-1:*"
+
 
 # you can overwrite defaults here
 #  stage: dev
@@ -43,19 +51,19 @@ provider:
 #  artifact: my-service-code.zip
 
 functions:
-  createUser:
-    handler: handler.createUser
+  searchAuthor:
+    handler: handler.searchAuthor
     events:
       - http:
-          path: users/create
-          method: post
+          path: author/search
           cors: true
-  listUsers:
-    handler: handler.listUsers
+
+  subscribeToAuthor:
+    handler: handler.subscribeToAuthor
     events:
       - http:
-          path: users
-          method: get
+          path: author/subscribe
+          method: post
           cors: true
 
 #    The following are a few example events you can configure
