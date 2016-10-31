@@ -42,6 +42,15 @@
                 "logs:PutLogEvents"
               ],
               "Resource": "arn:aws:logs:us-east-1:*:*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:*"
+              ],
+              "Resource": [
+                "arn:aws:dynamodb:us-east-1:*"
+              ]
             }
           ]
         },
@@ -52,17 +61,17 @@
         ]
       }
     },
-    "CreateUserLambdaFunction": {
+    "SearchAuthorLambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/app/dev/1477866335117-2016-10-30T22:25:35.117Z/app.zip"
+          "S3Key": "serverless/app/dev/1477913390085-2016-10-31T11:29:50.085Z/app.zip"
         },
-        "FunctionName": "app-dev-createUser",
-        "Handler": "handler.createUser",
+        "FunctionName": "app-dev-searchAuthor",
+        "Handler": "handler.searchAuthor",
         "MemorySize": 1024,
         "Role": {
           "Fn::GetAtt": [
@@ -74,17 +83,17 @@
         "Timeout": 6
       }
     },
-    "ListUsersLambdaFunction": {
+    "SubscribeToAuthorLambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/app/dev/1477866335117-2016-10-30T22:25:35.117Z/app.zip"
+          "S3Key": "serverless/app/dev/1477913390085-2016-10-31T11:29:50.085Z/app.zip"
         },
-        "FunctionName": "app-dev-listUsers",
-        "Handler": "handler.listUsers",
+        "FunctionName": "app-dev-subscribeToAuthor",
+        "Handler": "handler.subscribeToAuthor",
         "MemorySize": 1024,
         "Role": {
           "Fn::GetAtt": [
@@ -102,19 +111,19 @@
         "Name": "dev-app"
       }
     },
-    "ApiGatewayResourceUsersCreate": {
+    "ApiGatewayResourceAuthorSearch": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
-          "Ref": "ApiGatewayResourceUsers"
+          "Ref": "ApiGatewayResourceAuthor"
         },
-        "PathPart": "create",
+        "PathPart": "search",
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         }
       }
     },
-    "ApiGatewayResourceUsers": {
+    "ApiGatewayResourceAuthor": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
@@ -123,194 +132,25 @@
             "RootResourceId"
           ]
         },
-        "PathPart": "users",
+        "PathPart": "author",
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         }
       }
     },
-    "ApiGatewayMethodUsersCreatePost": {
-      "Type": "AWS::ApiGateway::Method",
+    "ApiGatewayResourceAuthorSubscribe": {
+      "Type": "AWS::ApiGateway::Resource",
       "Properties": {
-        "AuthorizationType": "NONE",
-        "HttpMethod": "POST",
-        "MethodResponses": [
-          {
-            "ResponseParameters": {
-              "method.response.header.Access-Control-Allow-Origin": true
-            },
-            "ResponseModels": {},
-            "StatusCode": 200
-          },
-          {
-            "ResponseParameters": {
-              "method.response.header.Access-Control-Allow-Origin": true
-            },
-            "ResponseModels": {},
-            "StatusCode": 400
-          },
-          {
-            "ResponseParameters": {
-              "method.response.header.Access-Control-Allow-Origin": true
-            },
-            "ResponseModels": {},
-            "StatusCode": 401
-          },
-          {
-            "ResponseParameters": {
-              "method.response.header.Access-Control-Allow-Origin": true
-            },
-            "ResponseModels": {},
-            "StatusCode": 403
-          },
-          {
-            "ResponseParameters": {
-              "method.response.header.Access-Control-Allow-Origin": true
-            },
-            "ResponseModels": {},
-            "StatusCode": 404
-          },
-          {
-            "ResponseParameters": {
-              "method.response.header.Access-Control-Allow-Origin": true
-            },
-            "ResponseModels": {},
-            "StatusCode": 422
-          },
-          {
-            "ResponseParameters": {
-              "method.response.header.Access-Control-Allow-Origin": true
-            },
-            "ResponseModels": {},
-            "StatusCode": 500
-          },
-          {
-            "ResponseParameters": {
-              "method.response.header.Access-Control-Allow-Origin": true
-            },
-            "ResponseModels": {},
-            "StatusCode": 502
-          },
-          {
-            "ResponseParameters": {
-              "method.response.header.Access-Control-Allow-Origin": true
-            },
-            "ResponseModels": {},
-            "StatusCode": 504
-          }
-        ],
-        "RequestParameters": {},
-        "Integration": {
-          "IntegrationHttpMethod": "POST",
-          "Type": "AWS_PROXY",
-          "Uri": {
-            "Fn::Join": [
-              "",
-              [
-                "arn:aws:apigateway:",
-                {
-                  "Ref": "AWS::Region"
-                },
-                ":lambda:path/2015-03-31/functions/",
-                {
-                  "Fn::GetAtt": [
-                    "CreateUserLambdaFunction",
-                    "Arn"
-                  ]
-                },
-                "/invocations"
-              ]
-            ]
-          },
-          "RequestTemplates": {
-            "application/json": "\n            #define( $loop )\n              {\n              #foreach($key in $map.keySet())\n                  \"$util.escapeJavaScript($key)\":\n                    \"$util.escapeJavaScript($map.get($key))\"\n                    #if( $foreach.hasNext ) , #end\n              #end\n              }\n            #end\n\n            {\n              \"body\": $input.json(\"$\"),\n              \"method\": \"$context.httpMethod\",\n              \"principalId\": \"$context.authorizer.principalId\",\n              \"stage\": \"$context.stage\",\n\n              #set( $map = $input.params().header )\n              \"headers\": $loop,\n\n              #set( $map = $input.params().querystring )\n              \"query\": $loop,\n\n              #set( $map = $input.params().path )\n              \"path\": $loop,\n\n              #set( $map = $context.identity )\n              \"identity\": $loop,\n\n              #set( $map = $stageVariables )\n              \"stageVariables\": $loop\n            }\n          ",
-            "application/x-www-form-urlencoded": "\n            #define( $body )\n              {\n              #foreach( $token in $input.path('$').split('&') )\n                #set( $keyVal = $token.split('=') )\n                #set( $keyValSize = $keyVal.size() )\n                #if( $keyValSize >= 1 )\n                  #set( $key = $util.escapeJavaScript($util.urlDecode($keyVal[0])) )\n                  #if( $keyValSize >= 2 )\n                    #set( $val = $util.escapeJavaScript($util.urlDecode($keyVal[1])) )\n                  #else\n                    #set( $val = '' )\n                  #end\n                  \"$key\": \"$val\"#if($foreach.hasNext),#end\n                #end\n              #end\n              }\n            #end\n\n            #define( $loop )\n              {\n              #foreach($key in $map.keySet())\n                  \"$util.escapeJavaScript($key)\":\n                    \"$util.escapeJavaScript($map.get($key))\"\n                    #if( $foreach.hasNext ) , #end\n              #end\n              }\n            #end\n\n            {\n              \"body\": $body,\n              \"method\": \"$context.httpMethod\",\n              \"principalId\": \"$context.authorizer.principalId\",\n              \"stage\": \"$context.stage\",\n\n              #set( $map = $input.params().header )\n              \"headers\": $loop,\n\n              #set( $map = $input.params().querystring )\n              \"query\": $loop,\n\n              #set( $map = $input.params().path )\n              \"path\": $loop,\n\n              #set( $map = $context.identity )\n              \"identity\": $loop,\n\n              #set( $map = $stageVariables )\n              \"stageVariables\": $loop\n            }\n          "
-          },
-          "PassthroughBehavior": "NEVER",
-          "IntegrationResponses": [
-            {
-              "StatusCode": 200,
-              "SelectionPattern": "",
-              "ResponseParameters": {
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              },
-              "ResponseTemplates": {}
-            },
-            {
-              "StatusCode": 400,
-              "SelectionPattern": ".*\\[400\\].*",
-              "ResponseParameters": {
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              },
-              "ResponseTemplates": {}
-            },
-            {
-              "StatusCode": 401,
-              "SelectionPattern": ".*\\[401\\].*",
-              "ResponseParameters": {
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              },
-              "ResponseTemplates": {}
-            },
-            {
-              "StatusCode": 403,
-              "SelectionPattern": ".*\\[403\\].*",
-              "ResponseParameters": {
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              },
-              "ResponseTemplates": {}
-            },
-            {
-              "StatusCode": 404,
-              "SelectionPattern": ".*\\[404\\].*",
-              "ResponseParameters": {
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              },
-              "ResponseTemplates": {}
-            },
-            {
-              "StatusCode": 422,
-              "SelectionPattern": ".*\\[422\\].*",
-              "ResponseParameters": {
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              },
-              "ResponseTemplates": {}
-            },
-            {
-              "StatusCode": 500,
-              "SelectionPattern": ".*(Process\\s?exited\\s?before\\s?completing\\s?request|\\[500\\]).*",
-              "ResponseParameters": {
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              },
-              "ResponseTemplates": {}
-            },
-            {
-              "StatusCode": 502,
-              "SelectionPattern": ".*\\[502\\].*",
-              "ResponseParameters": {
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              },
-              "ResponseTemplates": {}
-            },
-            {
-              "StatusCode": 504,
-              "SelectionPattern": ".*\\[504\\].*",
-              "ResponseParameters": {
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              },
-              "ResponseTemplates": {}
-            }
-          ]
+        "ParentId": {
+          "Ref": "ApiGatewayResourceAuthor"
         },
-        "ResourceId": {
-          "Ref": "ApiGatewayResourceUsersCreate"
-        },
+        "PathPart": "subscribe",
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         }
       }
     },
-    "ApiGatewayMethodUsersGet": {
+    "ApiGatewayMethodAuthorSearchGet": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -395,7 +235,7 @@
                 ":lambda:path/2015-03-31/functions/",
                 {
                   "Fn::GetAtt": [
-                    "ListUsersLambdaFunction",
+                    "SearchAuthorLambdaFunction",
                     "Arn"
                   ]
                 },
@@ -484,58 +324,195 @@
           ]
         },
         "ResourceId": {
-          "Ref": "ApiGatewayResourceUsers"
+          "Ref": "ApiGatewayResourceAuthorSearch"
         },
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         }
       }
     },
-    "ApiGatewayMethodUsersCreateOptions": {
+    "ApiGatewayMethodAuthorSubscribePost": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
-        "HttpMethod": "OPTIONS",
+        "HttpMethod": "POST",
         "MethodResponses": [
           {
-            "ResponseModels": {},
             "ResponseParameters": {
-              "method.response.header.Access-Control-Allow-Origin": true,
-              "method.response.header.Access-Control-Allow-Headers": true,
-              "method.response.header.Access-Control-Allow-Methods": true
+              "method.response.header.Access-Control-Allow-Origin": true
             },
-            "StatusCode": "200"
+            "ResponseModels": {},
+            "StatusCode": 200
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": 400
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": 401
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": 403
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": 404
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": 422
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": 500
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": 502
+          },
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true
+            },
+            "ResponseModels": {},
+            "StatusCode": 504
           }
         ],
         "RequestParameters": {},
         "Integration": {
-          "Type": "MOCK",
-          "RequestTemplates": {
-            "application/json": "{statusCode:200}"
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "SubscribeToAuthorLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
           },
+          "RequestTemplates": {
+            "application/json": "\n            #define( $loop )\n              {\n              #foreach($key in $map.keySet())\n                  \"$util.escapeJavaScript($key)\":\n                    \"$util.escapeJavaScript($map.get($key))\"\n                    #if( $foreach.hasNext ) , #end\n              #end\n              }\n            #end\n\n            {\n              \"body\": $input.json(\"$\"),\n              \"method\": \"$context.httpMethod\",\n              \"principalId\": \"$context.authorizer.principalId\",\n              \"stage\": \"$context.stage\",\n\n              #set( $map = $input.params().header )\n              \"headers\": $loop,\n\n              #set( $map = $input.params().querystring )\n              \"query\": $loop,\n\n              #set( $map = $input.params().path )\n              \"path\": $loop,\n\n              #set( $map = $context.identity )\n              \"identity\": $loop,\n\n              #set( $map = $stageVariables )\n              \"stageVariables\": $loop\n            }\n          ",
+            "application/x-www-form-urlencoded": "\n            #define( $body )\n              {\n              #foreach( $token in $input.path('$').split('&') )\n                #set( $keyVal = $token.split('=') )\n                #set( $keyValSize = $keyVal.size() )\n                #if( $keyValSize >= 1 )\n                  #set( $key = $util.escapeJavaScript($util.urlDecode($keyVal[0])) )\n                  #if( $keyValSize >= 2 )\n                    #set( $val = $util.escapeJavaScript($util.urlDecode($keyVal[1])) )\n                  #else\n                    #set( $val = '' )\n                  #end\n                  \"$key\": \"$val\"#if($foreach.hasNext),#end\n                #end\n              #end\n              }\n            #end\n\n            #define( $loop )\n              {\n              #foreach($key in $map.keySet())\n                  \"$util.escapeJavaScript($key)\":\n                    \"$util.escapeJavaScript($map.get($key))\"\n                    #if( $foreach.hasNext ) , #end\n              #end\n              }\n            #end\n\n            {\n              \"body\": $body,\n              \"method\": \"$context.httpMethod\",\n              \"principalId\": \"$context.authorizer.principalId\",\n              \"stage\": \"$context.stage\",\n\n              #set( $map = $input.params().header )\n              \"headers\": $loop,\n\n              #set( $map = $input.params().querystring )\n              \"query\": $loop,\n\n              #set( $map = $input.params().path )\n              \"path\": $loop,\n\n              #set( $map = $context.identity )\n              \"identity\": $loop,\n\n              #set( $map = $stageVariables )\n              \"stageVariables\": $loop\n            }\n          "
+          },
+          "PassthroughBehavior": "NEVER",
           "IntegrationResponses": [
             {
-              "StatusCode": "200",
+              "StatusCode": 200,
+              "SelectionPattern": "",
               "ResponseParameters": {
-                "method.response.header.Access-Control-Allow-Origin": "'*'",
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
               },
-              "ResponseTemplates": {
-                "application/json": ""
-              }
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": 400,
+              "SelectionPattern": ".*\\[400\\].*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": 401,
+              "SelectionPattern": ".*\\[401\\].*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": 403,
+              "SelectionPattern": ".*\\[403\\].*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": 404,
+              "SelectionPattern": ".*\\[404\\].*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": 422,
+              "SelectionPattern": ".*\\[422\\].*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": 500,
+              "SelectionPattern": ".*(Process\\s?exited\\s?before\\s?completing\\s?request|\\[500\\]).*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": 502,
+              "SelectionPattern": ".*\\[502\\].*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
+            },
+            {
+              "StatusCode": 504,
+              "SelectionPattern": ".*\\[504\\].*",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              },
+              "ResponseTemplates": {}
             }
           ]
         },
         "ResourceId": {
-          "Ref": "ApiGatewayResourceUsersCreate"
+          "Ref": "ApiGatewayResourceAuthorSubscribe"
         },
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         }
       }
     },
-    "ApiGatewayMethodUsersOptions": {
+    "ApiGatewayMethodAuthorSearchOptions": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -572,14 +549,58 @@
           ]
         },
         "ResourceId": {
-          "Ref": "ApiGatewayResourceUsers"
+          "Ref": "ApiGatewayResourceAuthorSearch"
         },
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         }
       }
     },
-    "ApiGatewayDeployment1477866335126": {
+    "ApiGatewayMethodAuthorSubscribeOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "ResponseModels": {},
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "StatusCode": "200"
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": {
+            "application/json": "{statusCode:200}"
+          },
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
+              },
+              "ResponseTemplates": {
+                "application/json": ""
+              }
+            }
+          ]
+        },
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceAuthorSubscribe"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayDeployment1477913390097": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -588,16 +609,16 @@
         "StageName": "dev"
       },
       "DependsOn": [
-        "ApiGatewayMethodUsersCreatePost",
-        "ApiGatewayMethodUsersGet"
+        "ApiGatewayMethodAuthorSearchGet",
+        "ApiGatewayMethodAuthorSubscribePost"
       ]
     },
-    "CreateUserLambdaPermissionApiGateway": {
+    "SearchAuthorLambdaPermissionApiGateway": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "FunctionName": {
           "Fn::GetAtt": [
-            "CreateUserLambdaFunction",
+            "SearchAuthorLambdaFunction",
             "Arn"
           ]
         },
@@ -605,12 +626,12 @@
         "Principal": "apigateway.amazonaws.com"
       }
     },
-    "ListUsersLambdaPermissionApiGateway": {
+    "SubscribeToAuthorLambdaPermissionApiGateway": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "FunctionName": {
           "Fn::GetAtt": [
-            "ListUsersLambdaFunction",
+            "SubscribeToAuthorLambdaFunction",
             "Arn"
           ]
         },
@@ -625,20 +646,20 @@
         "Ref": "ServerlessDeploymentBucket"
       }
     },
-    "CreateUserLambdaFunctionArn": {
+    "SearchAuthorLambdaFunctionArn": {
       "Description": "Lambda function info",
       "Value": {
         "Fn::GetAtt": [
-          "CreateUserLambdaFunction",
+          "SearchAuthorLambdaFunction",
           "Arn"
         ]
       }
     },
-    "ListUsersLambdaFunctionArn": {
+    "SubscribeToAuthorLambdaFunctionArn": {
       "Description": "Lambda function info",
       "Value": {
         "Fn::GetAtt": [
-          "ListUsersLambdaFunction",
+          "SubscribeToAuthorLambdaFunction",
           "Arn"
         ]
       }

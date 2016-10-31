@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/joshwcomeau/switchdig-services#readme",
   "dependencies": {
+    "amazon-product-api": "^0.4.2",
     "async": "^2.1.2",
     "dotenv": "^2.0.0",
     "dynamodb": "^0.3.6",
