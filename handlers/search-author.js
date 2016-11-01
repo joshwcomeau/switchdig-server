@@ -1,7 +1,7 @@
 const search = require('../helpers/product-advertising-api').search;
 
 module.exports = (event, context, callback) => {
-  search({ author: 'Jim Butcher' })
+  search({ author: event.queryStringParameters.author })
     .then(result => {
       const response = {
         statusCode: 200,
@@ -13,10 +13,18 @@ module.exports = (event, context, callback) => {
           input: event,
         }),
       };
+
+      callback(null, response);
     })
     .catch(error => {
-      callback(error);
-    })
-
-  callback(null, response);
+      callback(null, {
+        statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin" : "*" // Required for CORS support to work
+        },
+        body: JSON.stringify({
+          error: error,
+        }),
+      });
+    });
 };

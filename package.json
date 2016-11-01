@@ -2,9 +2,10 @@
   "name": "switchdig-server",
   "version": "1.0.0",
   "description": "",
-  "main": "secrets.js",
+  "main": "microservices/handler.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "serverless deploy"
   },
   "repository": {
     "type": "git",
@@ -19,8 +20,11 @@
   "dependencies": {
     "amazon-product-api": "^0.4.2",
     "async": "^2.1.2",
+    "aws-sdk": "^2.6.12",
+    "bluebird": "^3.4.6",
     "dotenv": "^2.0.0",
     "dynamodb": "^0.3.6",
-    "node-uuid": "^1.4.7"
+    "node-uuid": "^1.4.7",
+    "node-validator": "^0.1.23"
   }
 }

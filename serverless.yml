@@ -67,6 +67,22 @@ functions:
           method: post
           cors: true
 
+  # TEMPORARY. Debugging.
+  listUsers:
+    handler: handler.listUsers
+    events:
+      - http:
+        path: users
+        method: get
+        cors: true
+
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  dynamodb:
+  writeEnvVars:
+    REMOTE_STAGE: ${self:custom.stage}
+
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details
