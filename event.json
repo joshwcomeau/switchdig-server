@@ -1,6 +1,8 @@
 {
-  "author": "james dean",
-  "mediaTypes": ["print"],
-  "notificationMethod": "email",
-  "emailAddress": "josh@test.com"
+  "body": {
+    "author": "james dean",
+    "mediaTypes": ["print"],
+    "notificationMethod": "email",
+    "emailAddress": "josh@test.com"
+  }
 }

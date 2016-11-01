@@ -5,7 +5,13 @@
   "main": "microservices/handler.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "serverless deploy"
+    "deploy": "serverless deploy",
+
+    "invoke:search": "serverless invoke -f searchAuthor -p event.json -l",
+    "invoke:subscribe": "serverless invoke -f subscribeToAuthor -p event.json -l",
+
+    "logs:search": "serverless logs -f searchAuthor",
+    "logs:subscribe": "serverless logs -f subscribeToAuthor"
   },
   "repository": {
     "type": "git",

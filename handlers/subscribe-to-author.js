@@ -28,7 +28,25 @@ function createTableIfRequired() {
 
 module.exports = (event, context, callback) => {
   // Validate that we received all necessary information.
-  const body = JSON.parse(event.body);
+  console.log("BODY", event.body);
+  if (!event.body) {
+    const response = {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin" : "*" // Required for CORS support to work
+      },
+      body: JSON.stringify({
+        error: 'No body supplied',
+        input: event,
+      }),
+    };
+
+    callback(null, response);
+    return;
+  }
+  const body = typeof event.body === 'string'
+    ? JSON.parse(event.body)
+    : event.body;
 
   validate.subscription(body)
     .then(createTableIfRequired)

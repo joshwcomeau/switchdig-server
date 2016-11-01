@@ -72,9 +72,9 @@ functions:
     handler: handler.listUsers
     events:
       - http:
-        path: users
-        method: get
-        cors: true
+          path: users
+          method: get
+          cors: true
 
 
 custom:
