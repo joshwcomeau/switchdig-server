@@ -6,10 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "serverless deploy",
+    "invoke:search": "serverless invoke -f searchAuthor -p event-data/search-author.json -l",
+    "invoke:search:local": "serverless invoke local -f searchAuthor -p event-data/search-author.json -l",
 
-    "invoke:search": "serverless invoke -f searchAuthor -p event.json -l",
-    "invoke:subscribe": "serverless invoke -f subscribeToAuthor -p event.json -l",
-
+    "invoke:subscribe": "serverless invoke -f subscribeToAuthor -p event-data/subscribe-to-author.json -l",
     "logs:search": "serverless logs -f searchAuthor",
     "logs:subscribe": "serverless logs -f subscribeToAuthor"
   },
@@ -30,6 +30,7 @@
     "bluebird": "^3.4.6",
     "dotenv": "^2.0.0",
     "dynamodb": "^0.3.6",
+    "lodash": "^4.16.6",
     "node-uuid": "^1.4.7",
     "node-validator": "^0.1.23"
   }

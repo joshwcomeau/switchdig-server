@@ -19,7 +19,6 @@ module.exports.subscription = (body) => {
     .isObject()
     .withRequired('author', validator.isString())
     .withRequired('mediaTypes', validator.isArray())
-    .withRequired('notificationMethod', isValidNotificationMethod)
     .withRequired('mediaTypes', validator.isString());
 
   return Promise.fromCallback(cb => validator.run(check, body, cb));

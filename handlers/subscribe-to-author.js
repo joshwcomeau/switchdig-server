@@ -2,80 +2,60 @@
 
 const async = require('async');
 const Promise = require('bluebird');
+const AWS = require('aws-sdk');
+const uuid = require('node-uuid');
 
-const db = require('../database/dynamodb');
-const validate = require('../helpers/validation');
-const schemas = require('../database/schemas');
+const respond = require('../helpers/respond');
+
+const dynamo = new AWS.DynamoDB.DocumentClient();
 
 const DB_PREFIX = process.env.REMOTE_STAGE;
+const TABLE_NAME = 'Users';
 
+function getUser(email, callback) {
+  return dynamo.scan({
+    TableName: TABLE_NAME,
+    FilterExpression: 'email = :email',
+    ExpressionAttributeValues: { ':email': email }
+  }, callback)
+}
 
-function createTableIfRequired() {
-  // Check to see if we already have a 'users' table.
-  return db('listTables')
-    .then(tableNames => {
-      console.log("\n\nTABLE NAMES", tableNames);
-      tableNames.indexOf('Users') !== -1
-    })
-    .then(hasTable => {
-      if (hasTable) {
-        return;
-      }
-
-      return db('createTable', schemas.users);
-    });
+function createUser(params, callback) {
+  console.log("Creating user", Object.assign({ id: uuid.v4() }, params))
+  return dynamo.put({
+    TableName: TABLE_NAME,
+    Item: Object.assign({ id: uuid.v4() }, params),
+  }, callback)
 }
 
 module.exports = (event, context, callback) => {
-  // Validate that we received all necessary information.
-  console.log("BODY", event.body);
-  if (!event.body) {
-    const response = {
-      statusCode: 500,
-      headers: {
-        "Access-Control-Allow-Origin" : "*" // Required for CORS support to work
-      },
-      body: JSON.stringify({
-        error: 'No body supplied',
-        input: event,
-      }),
-    };
+  // TODO: Validate that we received all necessary information.
 
-    callback(null, response);
-    return;
+  if (!event.body) {
+    return callback(null, respond(500, { msg: 'No body supplied' }));
   }
+
   const body = typeof event.body === 'string'
     ? JSON.parse(event.body)
     : event.body;
 
-  validate.subscription(body)
-    .then(createTableIfRequired)
-    .then(result => {
-      console.log("RESULT", result)
-      const response = {
-        statusCode: 200,
-        headers: {
-          "Access-Control-Allow-Origin" : "*" // Required for CORS support to work
-        },
-        body: JSON.stringify({
-          message: 'Go Serverless v1.0! GET listUsers!',
-          input: event,
-        }),
-      };
+  async.autoInject({
+    checkForUser(next) {
+      getUser(body.email, next);
+    },
+    createUser(checkForUser, next) {
+      if (checkForUser.Count > 0) {
+        return next();
+      }
 
-      callback(null, response);
-    })
-    .catch(err => {
-      console.log("ERROR", err);
+      createUser(body, next)
+    },
+    user(checkForUser, createUser, next) {
+      const user = checkForUser.Items[0] || createUser;
 
-      const response = {
-        statusCode: 500,
-        headers: {
-          "Access-Control-Allow-Origin" : "*" // Required for CORS support to work
-        },
-        body: JSON.stringify(err),
-      };
-
-      callback(null, response);
-    });
+      return next(null, user);
+    },
+  }, (err, results) => {
+    callback(err, respond(200, results))
+  });
 };

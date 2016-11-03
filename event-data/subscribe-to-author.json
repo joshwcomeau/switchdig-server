@@ -3,6 +3,6 @@
     "author": "james dean",
     "mediaTypes": ["print"],
     "notificationMethod": "email",
-    "emailAddress": "josh@test.com"
+    "email": "josh@test.com"
   }
 }
