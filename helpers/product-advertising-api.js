@@ -20,3 +20,23 @@ module.exports.search = (metadata, searchIndex, responseGroup) => {
   // Returns a promise that must be handled by the invoking function.
   return client.itemSearch(params);
 }
+
+module.exports.getBindingFromMediaTypes = (mediaTypes) => {
+  let bindings = [];
+
+  if (mediaTypes.print) {
+    bindings.push('hardcover', 'paperback');
+  }
+
+  if (mediaTypes.ebook) {
+    bindings.push('kindle');
+  }
+
+  if (mediaTypes.audiobook) {
+    bindings.push('audible');
+  }
+
+  const bindingValue = bindings.join(' or ');
+
+  return `binding:${bindingValue}`
+}

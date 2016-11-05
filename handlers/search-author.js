@@ -2,13 +2,16 @@
 
 const _ = require('lodash');
 
-const search = require('../helpers/product-advertising-api').search;
+const apiHelpers = require('../helpers/product-advertising-api');
 const respond = require('../helpers/respond');
 
 module.exports = (event, context, callback) => {
   const searchedAuthor = event.queryStringParameters.author;
+  const searchedMediaTypes = event.queryStringParameters.mediaTypes;
 
-  search({ author: searchedAuthor })
+  const bindings = apiHelpers.getBindingFromMediaTypes(searchedMediaTypes);
+
+  apiHelpers.search({ author: searchedAuthor, power: bindings })
     .then(result => {
       // AWS returns a bunch of garbage we don't need.
       // Pluck out the valuable info, and return it to the client.
@@ -16,6 +19,7 @@ module.exports = (event, context, callback) => {
       const books = result
         .map(book => {
           const id = _.get(book, 'ASIN[0]');
+          console.log("BINDING", _.get(book, 'ItemAttributes[0].Binding'));
           const author = _.get(book, 'ItemAttributes[0].Author[0]');
           const title = _.get(book, 'ItemAttributes[0].Title[0]');
           const image = _.get(book, 'LargeImage[0].URL[0]');
@@ -23,8 +27,6 @@ module.exports = (event, context, callback) => {
           if (!author || !title || !image) {
             return null;
           }
-
-          // TODO: Filter by mediaType
 
           return { id, author, title, image };
         })
