@@ -1,3 +1,5 @@
+'use strict';
+
 const amazon = require('amazon-product-api');
 
 var client = amazon.createClient({
@@ -38,5 +40,5 @@ module.exports.getBindingFromMediaTypes = (mediaTypes) => {
 
   const bindingValue = bindings.join(' or ');
 
-  return `binding:${bindingValue}`
+  return `binding:${bindingValue}`;
 }

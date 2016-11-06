@@ -1,10 +1,6 @@
 {
   "queryStringParameters": {
-    "author": "scott meyer",
-    "mediaTypes": {
-      "print": true,
-      "ebook": false,
-      "audiobook": true
-    }
+    "author": "jin butchet",
+    "mediaTypes": "{\"print\": true,\"ebook\": false,\"audiobook\": true}"
   }
 }

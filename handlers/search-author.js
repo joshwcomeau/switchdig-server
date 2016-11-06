@@ -6,10 +6,14 @@ const apiHelpers = require('../helpers/product-advertising-api');
 const respond = require('../helpers/respond');
 
 module.exports = (event, context, callback) => {
+  console.log("Query params", event.queryStringParameters)
   const searchedAuthor = event.queryStringParameters.author;
-  const searchedMediaTypes = event.queryStringParameters.mediaTypes;
+  const searchedMediaTypes = JSON.parse(event.queryStringParameters.mediaTypes);
 
   const bindings = apiHelpers.getBindingFromMediaTypes(searchedMediaTypes);
+
+  console.log("Got bindings", Object.keys(searchedMediaTypes).join(', '))
+  console.log("Values", _.values(searchedMediaTypes).join(', '))
 
   apiHelpers.search({ author: searchedAuthor, power: bindings })
     .then(result => {
@@ -19,7 +23,6 @@ module.exports = (event, context, callback) => {
       const books = result
         .map(book => {
           const id = _.get(book, 'ASIN[0]');
-          console.log("BINDING", _.get(book, 'ItemAttributes[0].Binding'));
           const author = _.get(book, 'ItemAttributes[0].Author[0]');
           const title = _.get(book, 'ItemAttributes[0].Title[0]');
           const image = _.get(book, 'LargeImage[0].URL[0]');
@@ -60,7 +63,11 @@ module.exports = (event, context, callback) => {
 
       callback(null, response);
     })
-    .catch(error => {
-      callback(null, respond(500, { error: error }));
+    .catch(response => {
+      const error = response[0].Error[0];
+      const code = error.Code[0];
+      const message = error.Message[0];
+
+      callback(null, respond(500, { error: { code, message } }));
     });
 };

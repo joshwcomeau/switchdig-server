@@ -21,7 +21,6 @@ function getUser(email, callback) {
 }
 
 function createUser(params, callback) {
-  console.log("Creating user", Object.assign({ id: uuid.v4() }, params))
   return dynamo.put({
     TableName: TABLE_NAME,
     Item: Object.assign({ id: uuid.v4() }, params),
